@@ -1,0 +1,41 @@
+rules:
+  enabled: true
+  default_silence: true
+  matchers:
+    - id: build-status
+      description: "构建/测试状态更新"
+      type: regex
+      pattern: "(?i)\\b(build|test|deploy)\\b"
+      incremental_output: true
+      buttons:
+        - label: "查看日志"
+          action: "open_logs"
+        - label: "重新运行"
+          action: "rerun_pipeline"
+    - id: urgent
+      description: "高优先级关键词"
+      type: keyword
+      keywords:
+        - "紧急"
+        - "阻塞"
+        - "P0"
+      case_sensitive: false
+      incremental_output: true
+      buttons:
+        - label: "已接收"
+          action: "acknowledge"
+    - id: mention
+      description: "命中@mention时提示"
+      type: regex
+      pattern: "@\\w+"
+      incremental_output: true
+      buttons:
+        - label: "回复"
+          action: "reply"
+user_overrides:
+  default_mode: auto
+  users:
+    "12345":
+      enabled: false
+    "67890":
+      force_incremental: true
