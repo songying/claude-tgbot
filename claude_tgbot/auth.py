@@ -50,25 +50,28 @@ class AuthManager:
         self,
         provided_token: str,
         user_id: Optional[str],
-        ip: str,
+        server_ip: str,
         now: Optional[float] = None,
     ) -> bool:
         if now is None:
             now = time.time()
-        if self.is_ip_locked(ip, now):
+        if self.is_ip_locked(server_ip, now):
             return False
         if user_id and user_id in self.config.whitelist_keys:
             user_key = self.config.whitelist_keys[user_id]
+            if user_key.server_ip and user_key.server_ip != server_ip:
+                self.record_failure(server_ip, now)
+                return False
             if user_key.is_expired(now):
-                self.record_failure(ip, now)
+                self.record_failure(server_ip, now)
                 return False
             if provided_token == user_key.key:
                 return True
-            self.record_failure(ip, now)
+            self.record_failure(server_ip, now)
             return False
         if self._is_valid_token(provided_token, now):
             return True
-        self.record_failure(ip, now)
+        self.record_failure(server_ip, now)
         return False
 
     def _is_valid_token(self, provided_token: str, now: float) -> bool:
