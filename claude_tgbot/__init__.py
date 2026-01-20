@@ -1,1 +1,1 @@
-"""Claude Telegram bot utilities."""
+"""Core package for claude-tgbot."""
