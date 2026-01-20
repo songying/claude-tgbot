@@ -41,7 +41,7 @@
 
 ## 代码接口
 
-`src/prompt_rules.py` 提供 `PromptRuleEngine`：
+`claude_tgbot/prompt_rules.py` 提供 `PromptRuleEngine`：
 
 ```python
 engine = PromptRuleEngine(config)
@@ -53,3 +53,5 @@ if result:
 ```
 
 当 `result` 为 `None` 时表示无需推送，保持静默直到手动刷新或新命令触发。
+
+按钮的 `action` 字段会被当作要发送到 tmux 的文本命令（可用于数字选择或确认短语）。

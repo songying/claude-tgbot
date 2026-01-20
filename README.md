@@ -6,6 +6,18 @@ Telegram bot for remote control server and Claude code.
 
 See `docs/prompt_rules.md` for the configurable rule design and `config/prompt_rules.yaml` for the default configuration.
 
+## Setup
+
+See `docs/setup.md` for configuration and launch steps (Telegram Bot API token, polling/webhook settings).
+
+## Security
+
+See `docs/security.md` for whitelist/login policy, command restrictions, and audit logging.
+
+## Testing & Deployment
+
+See `docs/testing.md` for integration test guidance and `docs/deployment.md` for systemd/container deployment examples.
+
 Telegram bot utilities for remote control servers and Claude code.
 
 ## New utilities
@@ -29,7 +41,7 @@ from claude_tgbot.session_registry import TagSessionRegistry
 
 registry = TagSessionRegistry(Path("data/tag_sessions.json"))
 registry.reconcile_sessions(create_missing=True)
-record = registry.create_tag("daily-report")
+record = registry.create_tag("10001", "daily-report")
 print(record.tag_id, record.session_name)
 ```
 

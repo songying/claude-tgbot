@@ -1,4 +1,30 @@
 {
+  "telegram": {
+    "bot_token": "YOUR_BOT_TOKEN",
+    "use_webhook": false,
+    "webhook_url": null,
+    "listen_host": "0.0.0.0",
+    "listen_port": 8080
+  },
+  "tmux": {
+    "width": 120,
+    "height": 30,
+    "capture_start": -2000
+  },
+  "paths": {
+    "state_path": "data/state.json",
+    "tag_registry_path": "data/tag_sessions.json",
+    "prompt_rules_path": "config/prompt_rules.yaml"
+  },
+  "command_policy": {
+    "max_length": 4096,
+    "blocked_patterns": [
+      "rm -rf /",
+      ":\\s*\\(\\)\\s*\\{"
+    ],
+    "allowed_patterns": [],
+    "require_allowlist": false
+  },
   "token_keys": [
     {
       "value": "primary-token",
@@ -12,6 +38,7 @@
   "whitelist_keys": {
     "10001": {
       "key": "user-specific-key",
+      "server_ip": "203.0.113.10",
       "expires_at": 1893456000
     }
   },
