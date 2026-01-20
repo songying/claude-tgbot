@@ -29,6 +29,7 @@ cp config.example.json config.json
 - `paths.tag_registry_path`: 标签/会话映射持久化路径。
 - `paths.prompt_rules_path`: CLAUDE CODE 提示匹配规则配置。
 - `whitelist_keys`: 用户白名单，包含 `key` 与 `server_ip`。
+- `command_policy`: 命令执行限制策略。
 
 ## 3) 启动 bot
 

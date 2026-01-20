@@ -16,6 +16,15 @@
     "tag_registry_path": "data/tag_sessions.json",
     "prompt_rules_path": "config/prompt_rules.yaml"
   },
+  "command_policy": {
+    "max_length": 4096,
+    "blocked_patterns": [
+      "rm -rf /",
+      ":\\s*\\(\\)\\s*\\{"
+    ],
+    "allowed_patterns": [],
+    "require_allowlist": false
+  },
   "token_keys": [
     {
       "value": "primary-token",

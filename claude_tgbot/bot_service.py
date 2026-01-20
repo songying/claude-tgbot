@@ -63,6 +63,7 @@ class BotService:
             )
         )
         self._last_capture: Dict[str, str] = {}
+        self._user_locks: Dict[str, asyncio.Lock] = {}
 
     def build_application(self) -> Application:
         application = ApplicationBuilder().token(self._config.telegram.bot_token).build()
@@ -246,6 +247,10 @@ class BotService:
             if not record:
                 await self._send_text(update, "当前标签无效，请重新选择。")
                 return
+            policy_error = self._validate_command(action)
+            if policy_error:
+                await self._send_text(update, policy_error)
+                return
             self._tmux.send_command(record.session_name, action)
             await self._send_text(update, f"已发送: {action}")
             if state.mode == "claude":
@@ -302,20 +307,26 @@ class BotService:
         record: TagRecord,
         command: str,
     ) -> None:
-        def executor() -> DispatchResult:
-            self._tmux.ensure_session(record.session_name)
-            self._tmux.send_command(record.session_name, command)
-            return DispatchResult(status="sent", output="")
+        policy_error = self._validate_command(command)
+        if policy_error:
+            await self._send_text(update, policy_error)
+            return
+        lock = self._user_locks.setdefault(state.user_id, asyncio.Lock())
+        async with lock:
+            def executor() -> DispatchResult:
+                self._tmux.ensure_session(record.session_name)
+                self._tmux.send_command(record.session_name, command)
+                return DispatchResult(status="sent", output="")
 
-        self._dispatcher.dispatch(
-            user_id=state.user_id,
-            tag_id=record.tag_id,
-            command=command,
-            executor=executor,
-        )
+            self._dispatcher.dispatch(
+                user_id=state.user_id,
+                tag_id=record.tag_id,
+                command=command,
+                executor=executor,
+            )
 
-        if state.mode == "claude":
-            await self._send_capture(update, state, force=False)
+            if state.mode == "claude":
+                await self._send_capture(update, state, force=False)
 
     async def _send_capture(
         self,
@@ -662,6 +673,29 @@ class BotService:
         if current.startswith(previous):
             return current[len(previous) :]
         return current
+
+    def _validate_command(self, command: str) -> Optional[str]:
+        policy = self._config.command_policy
+        if not command.strip():
+            return "命令不能为空。"
+        if len(command) > policy.max_length:
+            return "命令过长。"
+        blocked = self._match_any(policy.blocked_patterns, command)
+        if blocked:
+            return "命令被策略阻止。"
+        if policy.require_allowlist:
+            if not self._match_any(policy.allowed_patterns, command):
+                return "命令不在允许列表中。"
+        return None
+
+    @staticmethod
+    def _match_any(patterns: List[str], command: str) -> bool:
+        import re
+
+        for pattern in patterns:
+            if re.search(pattern, command):
+                return True
+        return False
 
     def _list_files(self, cwd: str) -> List[str]:
         path = Path(cwd)

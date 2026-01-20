@@ -30,6 +30,14 @@ class PathsConfig:
 
 
 @dataclass
+class CommandPolicy:
+    max_length: int = 4096
+    blocked_patterns: List[str] = field(default_factory=list)
+    allowed_patterns: List[str] = field(default_factory=list)
+    require_allowlist: bool = False
+
+
+@dataclass
 class KeyConfig:
     value: str
     expires_at: Optional[float] = None
@@ -57,6 +65,7 @@ class AppConfig:
     telegram: TelegramConfig = field(default_factory=TelegramConfig)
     tmux: TmuxConfig = field(default_factory=TmuxConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
+    command_policy: CommandPolicy = field(default_factory=CommandPolicy)
     token_keys: List[KeyConfig] = field(default_factory=list)
     rotation_grace_seconds: int = 0
     max_failed_attempts: int = 5
@@ -70,6 +79,7 @@ class AppConfig:
         telegram = TelegramConfig(**payload.get("telegram", {}))
         tmux = TmuxConfig(**payload.get("tmux", {}))
         paths = PathsConfig(**payload.get("paths", {}))
+        command_policy = CommandPolicy(**payload.get("command_policy", {}))
         token_keys = [
             KeyConfig(value=item["value"], expires_at=item.get("expires_at"))
             for item in payload.get("token_keys", [])
@@ -88,6 +98,7 @@ class AppConfig:
             telegram=telegram,
             tmux=tmux,
             paths=paths,
+            command_policy=command_policy,
             token_keys=token_keys,
             rotation_grace_seconds=int(payload.get("rotation_grace_seconds", 0)),
             max_failed_attempts=int(payload.get("max_failed_attempts", 5)),
@@ -115,6 +126,12 @@ class AppConfig:
                 "state_path": self.paths.state_path,
                 "tag_registry_path": self.paths.tag_registry_path,
                 "prompt_rules_path": self.paths.prompt_rules_path,
+            },
+            "command_policy": {
+                "max_length": self.command_policy.max_length,
+                "blocked_patterns": self.command_policy.blocked_patterns,
+                "allowed_patterns": self.command_policy.allowed_patterns,
+                "require_allowlist": self.command_policy.require_allowlist,
             },
             "token_keys": [
                 {"value": key.value, "expires_at": key.expires_at}
