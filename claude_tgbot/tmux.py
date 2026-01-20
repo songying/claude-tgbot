@@ -34,6 +34,9 @@ class TmuxClient:
     def new_session(self, session_name: str) -> None:
         self._run(["tmux", "new-session", "-d", "-s", session_name])
 
+    def kill_session(self, session_name: str) -> None:
+        self._run(["tmux", "kill-session", "-t", session_name])
+
     def _run(self, command: Iterable[str], check: bool = True) -> TmuxCommandResult:
         completed = subprocess.run(
             list(command),

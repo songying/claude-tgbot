@@ -20,6 +20,7 @@
 
 ### 1.3 Routing Map (Example)
 - `/start` → `ui.render_main_menu()`
+- `/login <server_ip> <key>` → `auth.login()` and `ui.render_main_menu()`
 - `/tabs` → `tabs.open_list()`
 - `tab:select:<id>` → `tabs.activate(id)`
 - `tab:new` → `tabs.create()`

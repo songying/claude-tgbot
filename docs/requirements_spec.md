@@ -7,12 +7,14 @@
 - **Slash commands** (bot control):
   - `/start` — begin a session and show the main control panel.
   - `/help` — show usage and button legend.
+  - `/login <server_ip> <key>` — authenticate and unlock the bot.
   - `/tabs` — list and select tabs (aliases to the Tabs button).
   - `/jobs` — list jobs (aliases to the Jobs button).
   - `/claude` — toggle CLAUDE CODE mode for the active tab.
   - `/interval` — show interval selector (aliases to the Interval button).
   - `/refresh` — immediate screen refresh (aliases to the Refresh button).
   - `/edit` — start file selection/editor flow (aliases to the Edit button).
+  - `/cancel` — cancel the current edit/rename flow.
 
 ### 1.2 Callback Data (Buttons)
 Callback data prefixes should be short and parseable:
@@ -78,6 +80,8 @@ Callback data prefixes should be short and parseable:
 - `mode`: `normal` | `claude`
 - `interval`: `1m` | `5m` | `1h` | `never`
 - `edit_session`: `{edit_id, path, started_at, state}` or `null`
+- `authorized`: `true`/`false`
+- `server_ip`: last authenticated server IP
 
 ### 3.2 Mode Behavior
 

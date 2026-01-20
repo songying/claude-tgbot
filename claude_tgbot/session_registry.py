@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 import uuid
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -19,6 +18,7 @@ STATUS_MISSING = "missing"
 @dataclass
 class TagRecord:
     tag_id: str
+    user_id: str
     tag_name: str
     session_name: str
     status: str = STATUS_ACTIVE
@@ -45,6 +45,7 @@ class TagSessionRegistry:
         for item in data.get("records", []):
             record = TagRecord(
                 tag_id=item["tag_id"],
+                user_id=str(item.get("user_id", "default")),
                 tag_name=item["tag_name"],
                 session_name=item["session_name"],
                 status=item.get("status", STATUS_ACTIVE),
@@ -52,8 +53,9 @@ class TagSessionRegistry:
             if record.tag_id in records:
                 continue
             records[record.tag_id] = record
-            if record.tag_name not in tag_index:
-                tag_index[record.tag_name] = record.tag_id
+            key = self._tag_key(record.user_id, record.tag_name)
+            if key not in tag_index:
+                tag_index[key] = record.tag_id
         self._records = records
         self._tag_index = tag_index
 
@@ -67,25 +69,30 @@ class TagSessionRegistry:
             encoding="utf-8",
         )
 
-    def get_by_tag(self, tag_name: str) -> Optional[TagRecord]:
-        tag_id = self._tag_index.get(tag_name)
+    def get_by_tag(self, user_id: str, tag_name: str) -> Optional[TagRecord]:
+        tag_id = self._tag_index.get(self._tag_key(user_id, tag_name))
         if not tag_id:
             return None
         return self._records.get(tag_id)
 
-    def create_tag(self, tag_name: str) -> TagRecord:
-        existing = self.get_by_tag(tag_name)
+    def get_by_id(self, tag_id: str) -> Optional[TagRecord]:
+        return self._records.get(tag_id)
+
+    def create_tag(self, user_id: str, tag_name: str) -> TagRecord:
+        existing = self.get_by_tag(user_id, tag_name)
         if existing:
             return existing
-        session_name = self._generate_session_name(tag_name)
+        tag_id = self._generate_tag_id()
+        session_name = self._generate_session_name(tag_id)
         record = TagRecord(
-            tag_id=str(uuid.uuid4()),
+            tag_id=tag_id,
+            user_id=user_id,
             tag_name=tag_name,
             session_name=session_name,
             status=STATUS_ACTIVE,
         )
         self._records[record.tag_id] = record
-        self._tag_index[tag_name] = record.tag_id
+        self._tag_index[self._tag_key(user_id, tag_name)] = record.tag_id
         self._tmux.new_session(session_name)
         self.save()
         return record
@@ -102,7 +109,7 @@ class TagSessionRegistry:
             if create_missing:
                 session_name = record.session_name
                 if session_name in existing_sessions:
-                    session_name = self._generate_session_name(record.tag_name)
+                    session_name = self._generate_session_name(record.tag_id)
                     record.session_name = session_name
                 self._tmux.new_session(record.session_name)
                 record.status = STATUS_ACTIVE
@@ -113,19 +120,47 @@ class TagSessionRegistry:
             self.save()
         return updated
 
-    def list_records(self) -> Iterable[TagRecord]:
-        return list(self._records.values())
+    def list_records(self, user_id: Optional[str] = None) -> Iterable[TagRecord]:
+        if user_id is None:
+            return list(self._records.values())
+        return [record for record in self._records.values() if record.user_id == user_id]
 
-    def _generate_session_name(self, tag_name: str) -> str:
-        slug = self._slugify(tag_name)
-        existing = self._tmux.list_sessions() | {record.session_name for record in self._records.values()}
+    def rename_tag(self, tag_id: str, new_name: str) -> TagRecord:
+        record = self._records.get(tag_id)
+        if not record:
+            raise ValueError("Tag not found")
+        existing = self.get_by_tag(record.user_id, new_name)
+        if existing and existing.tag_id != tag_id:
+            raise ValueError("Tag name already exists")
+        old_key = self._tag_key(record.user_id, record.tag_name)
+        self._tag_index.pop(old_key, None)
+        record.tag_name = new_name
+        self._tag_index[self._tag_key(record.user_id, new_name)] = record.tag_id
+        self.save()
+        return record
+
+    def delete_tag(self, tag_id: str) -> None:
+        record = self._records.pop(tag_id, None)
+        if not record:
+            return
+        self._tag_index.pop(self._tag_key(record.user_id, record.tag_name), None)
+        self._tmux.kill_session(record.session_name)
+        self.save()
+
+    def _generate_tag_id(self) -> str:
+        existing_ids = set(self._records.keys())
         for _ in range(100):
-            candidate = f"tag-{slug}-{uuid.uuid4().hex[:8]}"
-            if candidate not in existing:
+            candidate = str(uuid.uuid4())
+            if candidate not in existing_ids:
                 return candidate
-        raise RuntimeError("Unable to generate unique tmux session name")
+        raise RuntimeError("Unable to generate unique tag id")
+
+    def _generate_session_name(self, tag_id: str) -> str:
+        candidate = f"tgbot_{tag_id}"
+        if self._tmux.has_session(candidate):
+            raise RuntimeError("Generated tmux session already exists")
+        return candidate
 
     @staticmethod
-    def _slugify(tag_name: str) -> str:
-        slug = re.sub(r"[^a-zA-Z0-9]+", "-", tag_name.strip()).strip("-")
-        return slug.lower() or "tag"
+    def _tag_key(user_id: str, tag_name: str) -> str:
+        return f"{user_id}:{tag_name}"

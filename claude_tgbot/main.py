@@ -12,3 +12,17 @@ def startup(config_path: str | Path) -> Tuple[ConfigManager, AuthManager]:
     config = manager.load()
     auth = AuthManager(config)
     return manager, auth
+
+
+def run(config_path: str | Path) -> None:
+    from claude_tgbot.bot_app import run_bot
+
+    run_bot(config_path)
+
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) < 2:
+        raise SystemExit("Usage: python -m claude_tgbot.main <config.json>")
+    run(sys.argv[1])
