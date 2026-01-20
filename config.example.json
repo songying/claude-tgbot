@@ -1,0 +1,19 @@
+{
+  "token_keys": [
+    {
+      "value": "primary-token",
+      "expires_at": 1893456000
+    }
+  ],
+  "rotation_grace_seconds": 3600,
+  "max_failed_attempts": 5,
+  "failure_window_seconds": 300,
+  "lockout_seconds": 900,
+  "whitelist_keys": {
+    "10001": {
+      "key": "user-specific-key",
+      "expires_at": 1893456000
+    }
+  },
+  "admin_user_ids": [10001]
+}
