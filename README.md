@@ -14,6 +14,9 @@ See `docs/setup.md` for configuration and launch steps (Telegram Bot API token, 
 
 See `docs/security.md` for whitelist/login policy, command restrictions, and audit logging.
 
+## Testing & Deployment
+
+See `docs/testing.md` for integration test guidance and `docs/deployment.md` for systemd/container deployment examples.
 
 Telegram bot utilities for remote control servers and Claude code.
 
