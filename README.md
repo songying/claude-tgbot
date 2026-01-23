@@ -10,6 +10,17 @@ See `docs/prompt_rules.md` for the configurable rule design and `config/prompt_r
 
 See `docs/setup.md` for configuration and launch steps (Telegram Bot API token, polling/webhook settings).
 
+## Apply for a Telegram bot & get access key
+
+1. Open Telegram and chat with **@BotFather**.
+2. Run `/newbot` and follow the prompts to name your bot.
+3. BotFather will return a **Bot API token**. Save it and set it as `telegram_token` in your `config.json`.
+4. Add your Telegram user ID to `whitelist_keys` in `config.json` and set a `key` + `server_ip`.
+   - Example entries are in `config.example.json`.
+5. Start the bot, then log in from Telegram with `/login <server_ip> <key>`.
+
+You can also rotate or update keys later with the admin commands below.
+
 ## Security
 
 See `docs/security.md` for whitelist/login policy, command restrictions, and audit logging.
