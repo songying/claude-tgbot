@@ -1,3 +1,6 @@
+# This project is NOT ACTIVE, due to the emerging of clawdbot
+
+
 # claude-tgbot
 
 Telegram bot for remote control server and Claude code.
